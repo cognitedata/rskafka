@@ -76,6 +76,7 @@ impl ClientBuilder {
         self
     }
 
+    /// Set up backoff configuration
     pub fn backoff_config(mut self, backoff_config: BackoffConfig) -> Self {
         self.backoff_config = Some(backoff_config);
         self
