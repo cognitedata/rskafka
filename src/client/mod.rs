@@ -76,7 +76,7 @@ impl ClientBuilder {
         self
     }
 
-    /// Set up backoff configuration
+    /// Set configuration for retry backoff
     pub fn backoff_config(mut self, backoff_config: BackoffConfig) -> Self {
         self.backoff_config = backoff_config;
         self
