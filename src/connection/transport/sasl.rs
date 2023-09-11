@@ -5,6 +5,7 @@ pub enum SaslConfig {
     /// # References
     /// - <https://datatracker.ietf.org/doc/html/rfc4616>
     Plain { username: String, password: String },
+    Oauth {},
 }
 
 impl SaslConfig {
@@ -16,6 +17,9 @@ impl SaslConfig {
                 auth.push(0);
                 auth.extend(password.bytes());
                 auth
+            },
+            Self::Oauth {  } => {
+                Vec::new()
             }
         }
     }
@@ -23,6 +27,7 @@ impl SaslConfig {
     pub(crate) fn mechanism(&self) -> &str {
         match self {
             Self::Plain { .. } => "PLAIN",
+            Self::Oauth {  } => "OAUTHBEARER"
         }
     }
 }
