@@ -2,3 +2,5 @@
 Cargo.lock
 perf.data*
 .vscode/
+certificates
+**.DS_Store

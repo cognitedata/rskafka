@@ -21,6 +21,9 @@ pub const ENV_TEST_BROKER_IMPL: &str = "TEST_BROKER_IMPL";
 /// Environment variable that contains the connection string for a SOCKS5 proxy that can be used for testing.
 pub const ENV_SOCKS5_PROXY: &str = "SOCKS5_PROXY";
 
+/// Environment variable that contains the endpoint for tls based connection
+pub const ENV_TLS_ENDPOINT: &str = "TLS_ENDPOINT";
+
 /// Broker implementation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BrokerImpl {
@@ -45,6 +48,7 @@ pub struct TestConfig {
     pub bootstrap_brokers: Vec<String>,
     pub broker_impl: BrokerImpl,
     pub socks5_proxy: Option<String>,
+    pub tls_endpoint: Option<Vec<String>>,
 }
 
 impl TestConfig {
@@ -72,6 +76,10 @@ impl TestConfig {
             .map(|s| s.trim().to_owned())
             .collect();
 
+        let tls_endpoint = std::env::var(ENV_TLS_ENDPOINT)
+            .ok()
+            .map(|v| v.split(',').map(|s| s.trim().to_owned()).collect::<Vec<_>>());
+
         let broker_impl = std::env::var(ENV_TEST_BROKER_IMPL)
             .ok()
             .unwrap_or_else(|| panic!("{ENV_TEST_BROKER_IMPL} is required to determine the broker implementation (e.g. kafka, redpanda)"))
@@ -88,6 +96,7 @@ impl TestConfig {
             bootstrap_brokers,
             broker_impl,
             socks5_proxy,
+            tls_endpoint,
         })
     }
 }

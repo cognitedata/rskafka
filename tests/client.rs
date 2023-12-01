@@ -201,15 +201,18 @@ async fn test_non_existing_partition() {
 }
 
 // Disabled as currently no TLS integration tests
-#[ignore]
+// #[ignore]
 #[tokio::test]
-#[cfg(feature = "transport-tls")]
+// #[cfg(feature = "transport-tls")]
 async fn test_tls() {
     maybe_start_logging();
+    let cert_path = env::var("TEST_TLS_CERTIFICATE_PATH").unwrap_or("/tmp".to_string());
+    let root_ca = env::var("TEST_TLS_ROOT_CA_CERTS_NAME").unwrap_or("cluster-ca".to_string());
+    let client_cert = env::var("TEST_TLS_CLIENT_CERTS_NAME").unwrap_or("client".to_string());
 
     let mut root_store = rustls::RootCertStore::empty();
 
-    let file = std::fs::File::open("/tmp/cluster-ca.crt").unwrap();
+    let file = std::fs::File::open(format!("{cert_path}/{root_ca}.pem")).unwrap();
     let mut reader = std::io::BufReader::new(file);
     match rustls_pemfile::read_one(&mut reader).unwrap().unwrap() {
         rustls_pemfile::Item::X509Certificate(key) => {
@@ -218,14 +221,14 @@ async fn test_tls() {
         _ => unreachable!(),
     }
 
-    let file = std::fs::File::open("/tmp/ca.crt").unwrap();
+    let file = std::fs::File::open(format!("{cert_path}/{client_cert}-signed.pem")).unwrap();
     let mut reader = std::io::BufReader::new(file);
     let producer_root = match rustls_pemfile::read_one(&mut reader).unwrap().unwrap() {
         rustls_pemfile::Item::X509Certificate(key) => rustls::Certificate(key),
         _ => unreachable!(),
     };
 
-    let file = std::fs::File::open("/tmp/ca.key").unwrap();
+    let file = std::fs::File::open(format!("{cert_path}/{client_cert}-pkcs8.key")).unwrap();
     let mut reader = std::io::BufReader::new(file);
     let private_key = match rustls_pemfile::read_one(&mut reader).unwrap().unwrap() {
         rustls_pemfile::Item::PKCS8Key(key) => rustls::PrivateKey(key),
@@ -239,7 +242,7 @@ async fn test_tls() {
         .unwrap();
 
     let test_cfg = maybe_skip_kafka_integration!();
-    ClientBuilder::new(test_cfg.bootstrap_brokers)
+    ClientBuilder::new(test_cfg.tls_endpoint.unwrap())
         .tls_config(Arc::new(config))
         .build()
         .await
